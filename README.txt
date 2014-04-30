@@ -19,4 +19,4 @@ An Elliptical Curve class, that will create an elliptical curve given the user i
 1) Print Curve will print the current curve in the form x^3+ax+b
 2) Evaluate point will evluvate a point on the curve given an x-coordinate.
 3) Point Addition will add two points within the curve. The user must input two points for this to work. If you only have 1 point, you must select point doubling option. 
-4) Evaluate all points on the curve will print all of the x,y coordinates within the curve. If your curve is over the real numbers, there is an infnite number of possible points, thus the program will simply print the identity of the curve, infinity. 	
+3) Evaluate all points on the curve will print all of the x,y coordinates within the curve. If your curve is over the real numbers, there is an infnite number of possible points, thus the program will simply print the identity of the curve, infinity. 	
