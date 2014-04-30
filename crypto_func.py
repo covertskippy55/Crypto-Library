@@ -89,15 +89,15 @@ def egcd(x, y):
     return x, u2, v2
 
 
-#This is our factorization by fermats
+# This is our factorization by fermats
 def fermat_fac(n):
     a = int(math.ceil(math.sqrt(
         n)))  # our a is the ceiling of the sqrt, note that all our calculations are done
-        # with whole numbers hence the int conversion.
+    # with whole numbers hence the int conversion.
     b2 = a * a - n  # our b2 is the square of a - the original value
     b = int(
         math.sqrt(b2))  # our b is the square root of b2, this is part of our factor
-        # if our b2 is infact a perfect square
+    # if our b2 is infact a perfect square
 
     while b * b != b2:  # if b2 is not a perfect square we keep going(if the sqrt of b2 squared is not equal to b2)
         a += 1  # we increment a by 1 and try again for a perfect square
@@ -254,35 +254,99 @@ def inverse(x, p):
 
 class EllipticalCurve:
     def __init__(self, a, b, p):
+        """
+        This is our Elliptical Curve class. It will instantiate an elliptical curve of the form x^3+ax+b. It will also
+        take a prime if you need to, and it will do all calculations mod said prime. This also has a function parameter
+        which is a lambda that will map a given x to the our curve
+        :param a: This is our a in ax.
+        :param b: This is our b in + b
+        :param p: This is our prime number to take mod.
+        """
         self.a_input = a
         self.b_input = b
         self.prime = p
-        self.function = lambda (x): pow(x, 3) + (self.a_input * x) + self.b_input
+        self.function = lambda (x): pow(x, 3, self.prime) + (self.a_input * x) + self.b_input
 
     def print_curve(self):
+        """
+        This is a simple print function that takes nothing as input. It will print the curve as a string.
+
+        """
         print "x^3+{0:d}x+{1:d}".format(self.a_input, self.b_input)
 
     def evaluvate_point(self, x):
-        if self.prime >= 1:
+        """
+        This function will take the given x-coordinate and plug it into the current curve. It will return the y^2 point.
+        :param x: This is the x coordinate which we will use to evaluate it on the curve
+        :return: The y coordinate soured.
+        """
+        if self.prime >= 1:  # this if statement is there to ensure that if the prime the user entered is 0,
+            # meaning the user wants the curve over the real number field, we wont actually use the modulus
+
             return self.function(x) % self.prime
         else:
             return self.function(x)
 
-    def point_addition(self, xp, yp, xq, yq, ):
+    def point_addition(self, xp, yp, xq, yq):
+        """
+        This is out point addition function. It uses all the inputs it get in order to calculate the addition of
+         two points on the given curve. Not again that if the prime user entered is greater than zero we will take
+         everything mod that number.
+        :param xp: This is our first x coordinate
+        :param yp: This is our first y coordinate
+        :param xq: This is our second x coordinate
+        :param yq: This is our second y coordinate
+        :return: This will return the x and y coordinates of the result of adding the previous two points on an
+        the given elliptical curve
+        """
         if self.prime >= 1:
-            m = ((yq - yp) / (xq - xp)) % self.prime
+            m = ((yq - yp) * (inverse(xq - xp, self.prime))) % self.prime  # This will give us the slope of the
+            #  line between the two points. Rather than dividing like you would do on a real number field,
+            # we must take the inverse of the denominator with respect to the prime and multiply the numerator with it
+
             xr = (pow(m, 2, self.prime) - xp - xq) % self.prime
+            while xr < 0:
+                xr += self.prime
             yr = m * (xp - xr) - yp % self.prime
-            if yr < 0:
+            while yr < 0:  # if the y coordinate we got was negative add primes until we get a positive number
                 yr += self.prime
-        else:
+        else:  # This bit is the same as above but without the inverse stuff and the modulus part
             m = ((yq - yp) / (xq - xp))
             xr = pow(m, 2, self.prime) - xp - xq
             yr = m * (xp - xr) - yp
         return xr, yr
 
+    def evaluate_all_points(self):
+        """
+        This is our function to evaluate all points on a given elliptical curve. It will start at zero and work until
+        we reach our prime - 1. If the curve is not over a prime, there is an infnite amount of possible points and thus
+        this cannot be used. In this case it will simply return infnity
+
+        :return: an array of tuples containing the x,y coordinates that belong on the curve
+        """
+        rlist = []
+        for i in range(0, self.prime):
+            square_root = math.sqrt(self.evaluvate_point(i))
+            if float.is_integer(square_root):  # If the y is not an integer its not on the curve
+                rlist.append([i, int(square_root)])
+                negative_sqrt = -int(square_root)
+                if square_root != negative_sqrt:  # If we have the same y and -y we only need to append it once
+                    while negative_sqrt < 0:  # make our negative y into a positive by adding primes
+                        negative_sqrt += self.prime
+                    negative_sqrt %= self.prime
+                    rlist.append([i, negative_sqrt])
+        rlist.append([float('inf'), float('inf')])  # The final point in any elliptical curve is infinity, which must be
+        # added separately
+        return rlist
+
 
 def main():
+    """
+    This is our main method. It will initialize an infinite loop that will run until the user enters 0 to end the
+    program. It will allow the user to chose any of the available cryptographic options. Each loop will also ask the
+      user to input any additional information needed to do the function.
+
+    """
     while True:
         choice = int(raw_input(
             "\n Please pick one of the options:\n 0)Exit\n 1)Russian Peasant Algorithm\n 2)Extended GCD\n"
@@ -333,19 +397,26 @@ def main():
             ecurve = EllipticalCurve(a, b, p)
             while True:
                 x = int(raw_input(
-                    "What would you like to do?\n0) Return to previous menu\n1) Print the curve\n2)"
-                    " Evaluate a point on the curve\n"
+                    "What would you like to do? Select the corresponding number\n0) Return to previous menu\n1)"
+                    " Print the curve\n2)"
+                    " Evaluate a point on the curve(This will only give you the positive y value, the negative is just"
+                    "the negative of it) \n"
                     "3) Point addition with two points(you MUST have two points, if you only have one please "
-                    "select Point Doubling)\n"))
+                    "select Point Doubling)\n4) Evaluate all points on the curve"
+                    "(note that if your prime is very large,"
+                    "this function will fail and return an error, and if your curve is not over a prime, this will not"
+                    " work because there are infinite possible points)\n"))
                 if x == 0:
                     break
                 elif x == 1:
                     ecurve.print_curve()
                 elif x == 2:
                     x = int(raw_input("Please enter the x point: "))
-                    y2 = ecurve.evaluvate_point(x)
+                    y2 = ecurve.evaluvate_point(x)  # The return value we get evaluvate_point is actually y^2, so we
+                    # take the squire root of it. If its an integer then we have a point on the curve, so output the x
+                    # and y coordinates. Otherwise let the user know its not on the curve.
                     if float.is_integer(math.sqrt(y2)):
-                        print [x, math.sqrt(y2)]
+                        print [x, int(math.sqrt(y2))]
                     else:
                         print 'The x coordinate you entered is not within the curve\n'
                 elif x == 3:
@@ -354,6 +425,8 @@ def main():
                     xq = int(raw_input("Please enter the second x coordinate: "))
                     yq = int(raw_input("Plesae enter the second y coordinate: "))
                     print ecurve.point_addition(xp, yp, xq, yq)
+                elif x == 4:
+                    print ecurve.evaluate_all_points()
         elif choice == 8:
             x = int(raw_input("Please enter the number to be factored: "))
             print primefactors(x)
