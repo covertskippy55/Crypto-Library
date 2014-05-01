@@ -310,9 +310,10 @@ class EllipticalCurve:
             yr = m * (xp - xr) - yp % self.prime
             while yr < 0:  # if the y coordinate we got was negative add primes until we get a positive number
                 yr += self.prime
+            yr %= self.prime
         else:  # This bit is the same as above but without the inverse stuff and the modulus part
             m = ((yq - yp) / (xq - xp))
-            xr = pow(m, 2, self.prime) - xp - xq
+            xr = pow(m, 2) - xp - xq
             yr = m * (xp - xr) - yp
         return xr, yr
 
@@ -338,6 +339,29 @@ class EllipticalCurve:
         rlist.append([float('inf'), float('inf')])  # The final point in any elliptical curve is infinity, which must be
         # added separately
         return rlist
+
+    def point_doubling(self, xp, yp):
+        """
+      This function will take the given point on the curve and will add it to itself. We cant do normal point addition
+      because the slope will be zero which does not allow for the function to work properly.
+      :param xp: The first x coordinate
+      :param yp: The first y coordinate
+      :return: a tuple that is the new x,y coordinate after point doubling
+      """
+
+        if self.prime >= 1:
+            slope = lambda x, y: ((3 * (pow(x, 2, self.prime)) + self.a_input) * (
+                inverse(2 * y, self.prime))) % self.prime
+            m = slope(xp, yp)
+            xr = (pow(m, 2, self.prime) - 2 * xp) % self.prime
+            yr = (m * (xp - xr) - yp) % self.prime
+            return xr, yr
+        else:
+            slope = lambda x, y: (3 * (pow(x, 2)) + self.a_input) / (2 * y)
+            m = slope(xp, yp)
+            xr = pow(m, 2) - (2 * xp)
+            yr = m * (xp - xr) - yp
+            return xr, yr
 
 
 def main():
@@ -397,15 +421,13 @@ def main():
             ecurve = EllipticalCurve(a, b, p)
             while True:
                 x = int(raw_input(
-                    "What would you like to do? Select the corresponding number\n0) Return to previous menu\n1)"
-                    " Print the curve\n2)"
-                    " Evaluate a point on the curve(This will only give you the positive y value, the negative is just"
-                    "the negative of it) \n"
-                    "3) Point addition with two points(you MUST have two points, if you only have one please "
-                    "select Point Doubling)\n4) Evaluate all points on the curve"
-                    "(note that if your prime is very large,"
-                    "this function will fail and return an error, and if your curve is not over a prime, this will not"
-                    " work because there are infinite possible points)\n"))
+                    "What would you like to do? Select the corresponding number\n0) Return to previous menu\n1) "
+                    "Print the curve\n2) Evaluate a point on the curve(This will only give you the positive y value, "
+                    "the negative is just the negative of it) \n3) Point addition with two points(you MUST have "
+                    "two points, if you only have one please select Point Doubling)\n4) Point Doubling(Use this if you "
+                    "have only one available point in your curve and you wish to get 2P\n5) Evaluate all points on the "
+                    "curve (note that if your prime is very large, this function will fail and return an error,and if "
+                    "your curve is not over a prime, this will not work because there are infinite possible points)\n"))
                 if x == 0:
                     break
                 elif x == 1:
@@ -426,6 +448,10 @@ def main():
                     yq = int(raw_input("Plesae enter the second y coordinate: "))
                     print ecurve.point_addition(xp, yp, xq, yq)
                 elif x == 4:
+                    xp = int(raw_input("Please enter the x - coordinate: "))
+                    yp = int(raw_input("Please enter the y - coordinate: "))
+                    print ecurve.point_doubling(xp, yp)
+                elif x == 5:
                     print ecurve.evaluate_all_points()
         elif choice == 8:
             x = int(raw_input("Please enter the number to be factored: "))
