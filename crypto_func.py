@@ -367,9 +367,9 @@ class EllipticalCurve:
                 yr = (m * (xp - xr) - yp) % self.prime
                 return xr, yr
             else:
-                print "The GCD between the x difference and the modulous is not 1, one factor of modulous is: ", d
+                print "The modulous is not prime, because gcd was > 1."
                 r = self.prime/d
-                print "The other factor of the modulous is: ", r
+                print "One factor of the modulous is: {0:d}, The other factor of the modulous is: {1:d} ".format(d, r)
                 return 0
         else:
             slope = lambda x, y: (3 * (pow(x, 2)) + self.a_input) / (2 * y)
