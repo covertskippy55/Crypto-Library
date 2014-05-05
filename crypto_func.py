@@ -297,20 +297,28 @@ class EllipticalCurve:
         :param xq: This is our second x coordinate
         :param yq: This is our second y coordinate
         :return: This will return the x and y coordinates of the result of adding the previous two points on an
-        the given elliptical curve
+        the given elliptical curve, or it will return 0 if the modulous was composite and a factor was found
         """
         if self.prime >= 1:
-            m = ((yq - yp) * (inverse(xq - xp, self.prime))) % self.prime  # This will give us the slope of the
-            #  line between the two points. Rather than dividing like you would do on a real number field,
-            # we must take the inverse of the denominator with respect to the prime and multiply the numerator with it
+            d, inv, _ = egcd(xq-xp, self.prime)
+            if d == 1:
+                m = ((yq - yp) * inv) % self.prime  # This will give us the slope of the
+                #  line between the two points. Rather than dividing like you would do on a real number field,
+                # we must take the inverse of the denominator with respect to the prime and multiply the numerator
+                #  with it
 
-            xr = (pow(m, 2, self.prime) - xp - xq) % self.prime
-            while xr < 0:
-                xr += self.prime
-            yr = m * (xp - xr) - yp % self.prime
-            while yr < 0:  # if the y coordinate we got was negative add primes until we get a positive number
-                yr += self.prime
-            yr %= self.prime
+                xr = (pow(m, 2, self.prime) - xp - xq) % self.prime
+                while xr < 0:
+                    xr += self.prime
+                yr = m * (xp - xr) - yp % self.prime
+                while yr < 0:  # if the y coordinate we got was negative add primes until we get a positive number
+                    yr += self.prime
+                    yr %= self.prime
+            else:
+                print "The modulous is not prime, because gcd was > 1."
+                r = self.prime/d
+                print "One factor of the modulous is: {0:d}, The other factor of the modulous is: {1:d} ".format(d, r)
+                return 0
         else:  # This bit is the same as above but without the inverse stuff and the modulus part
             m = ((yq - yp) / (xq - xp))
             xr = pow(m, 2) - xp - xq
@@ -321,7 +329,8 @@ class EllipticalCurve:
         """
         This is our function to evaluate all points on a given elliptical curve. It will start at zero and work until
         we reach our prime - 1. If the curve is not over a prime, there is an infnite amount of possible points and thus
-        this cannot be used. In this case it will simply return infnity
+        this cannot be used. In this case it will simply return infnity. This function doesnt check quadratic residues
+        so please ignore for now.
 
         :return: an array of tuples containing the x,y coordinates that belong on the curve
         """
@@ -350,12 +359,18 @@ class EllipticalCurve:
       """
 
         if self.prime >= 1:
-            slope = lambda x, y: ((3 * (pow(x, 2, self.prime)) + self.a_input) * (
-                inverse(2 * y, self.prime))) % self.prime
-            m = slope(xp, yp)
-            xr = (pow(m, 2, self.prime) - 2 * xp) % self.prime
-            yr = (m * (xp - xr) - yp) % self.prime
-            return xr, yr
+            d, inv, _ = egcd(2*yp, self.prime)
+            if d == 1:
+                slope = lambda x, y: ((3 * (pow(x, 2, self.prime)) + self.a_input) * inv) % self.prime
+                m = slope(xp, yp)
+                xr = (pow(m, 2, self.prime) - 2 * xp) % self.prime
+                yr = (m * (xp - xr) - yp) % self.prime
+                return xr, yr
+            else:
+                print "The GCD between the x difference and the modulous is not 1, one factor of modulous is: ", d
+                r = self.prime/d
+                print "The other factor of the modulous is: ", r
+                return 0
         else:
             slope = lambda x, y: (3 * (pow(x, 2)) + self.a_input) / (2 * y)
             m = slope(xp, yp)
@@ -452,7 +467,8 @@ def main():
                     yp = int(raw_input("Please enter the y - coordinate: "))
                     print ecurve.point_doubling(xp, yp)
                 elif x == 5:
-                    print ecurve.evaluate_all_points()
+                   # print ecurve.evaluate_all_points()
+                    print "This function is currently being reconstructed."
         elif choice == 8:
             x = int(raw_input("Please enter the number to be factored: "))
             print primefactors(x)
