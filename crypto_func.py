@@ -321,12 +321,12 @@ class EllipticalCurve:
                 print "The modulous is not prime, because gcd was > 1."
                 r = self.prime/d
                 print "One factor of the modulous is: {0:d}, The other factor of the modulous is: {1:d} ".format(d, r)
-                return 0
+                return 0, 0, 0
         else:  # This bit is the same as above but without the inverse stuff and the modulus part
             m = ((yq - yp) / (xq - xp))
             xr = pow(m, 2) - xp - xq
             yr = m * (xp - xr) - yp
-        return xr, yr
+        return 1, xr, yr
 
     def evaluate_all_points(self):
         """
@@ -369,18 +369,32 @@ class EllipticalCurve:
                 m = slope(xp)
                 xr = (pow(m, 2, self.prime) - 2 * xp) % self.prime
                 yr = (m * (xp - xr) - yp) % self.prime
-                return xr, yr
+                return 1, xr, yr
             else:
                 print "The modulous is not prime, because gcd was > 1."
                 r = self.prime/d
                 print "One factor of the modulous is: {0:d}, The other factor of the modulous is: {1:d} ".format(d, r)
-                return 0
+                return 0, 0, 0
         else:
             slope = lambda x, y: (3 * (pow(x, 2)) + self.a_input) / (2 * y)
             m = slope(xp, yp)
             xr = pow(m, 2) - (2 * xp)
             yr = m * (xp - xr) - yp
-            return xr, yr
+            return 1, xr, yr
+
+    def ecurve_factorization(self, x, y):
+        """
+        This function basically automatizes the point doubling and then point addition until we reach a gcd > 1. Note
+         that running this function on a large prime number can cause an infinite loop.
+        :param x: The x coordinate for point doubling
+        :param y: The y coordinate for point doubling
+        """
+        ret, xr, yr = self.point_doubling(x, y)
+        if ret == 1:
+            while True:
+                ret, xr, yr = self.point_addition(x, y, xr, yr)
+                if ret == 0:
+                    break
 
 
 def main():
@@ -444,7 +458,8 @@ def main():
                     "Print the curve\n2) Evaluate a point on the curve(This will only give you the positive y value, "
                     "the negative is just the negative of it) \n3) Point addition with two points(you MUST have "
                     "two points, if you only have one please select Point Doubling)\n4) Point Doubling(Use this if you "
-                    "have only one available point in your curve and you wish to get 2P\n"))
+                    "have only one available point in your curve and you wish to get 2P\n5) Factorization of the "
+                    "modulus( use this if your curve is set up for factorizing the modulus)"))
                 if x == 0:
                     break
                 elif x == 1:
@@ -462,12 +477,16 @@ def main():
                     xp = int(raw_input("Please enter the first x coordinate: "))
                     yp = int(raw_input("Please enter the first y coordinate: "))
                     xq = int(raw_input("Please enter the second x coordinate: "))
-                    yq = int(raw_input("Plesae enter the second y coordinate: "))
+                    yq = int(raw_input("Please enter the second y coordinate: "))
                     print ecurve.point_addition(xp, yp, xq, yq)
                 elif x == 4:
                     xp = int(raw_input("Please enter the x - coordinate: "))
                     yp = int(raw_input("Please enter the y - coordinate: "))
                     print ecurve.point_doubling(xp, yp)
+                elif x == 5:
+                    xp = int(raw_input("Please enter the x - coordinate: "))
+                    yp = int(raw_input("Please enter the y - coordinate: "))
+                    ecurve.ecurve_factorization(xp, yp)
         elif choice == 8:
             x = int(raw_input("Please enter the number to be factored: "))
             print primefactors(x)
