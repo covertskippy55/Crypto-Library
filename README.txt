@@ -20,4 +20,4 @@ An Elliptical Curve class, that will create an elliptical curve given the user i
 2) Evaluate point will evluvate a point on the curve given an x-coordinate.
 3) Point Addition will add two points within the curve. The user must input two points for this to work. If you only have 1 point, you must select point doubling option. 
 4) Point Doubling will calculate 2p given p. Note that doing this again with 2p will provide 4p. If you want an odd doubling you must, add p to the current doubled p. Factorization is also done automatically if you have a composite modulus.
-
+5) Factor using elliptical curve. This function will take in an x,y coordinate and produce a factor for the modulous, if said modulous is a composite one. If the number is prime, you will have in infinite loop.
