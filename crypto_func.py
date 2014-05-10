@@ -265,7 +265,10 @@ class EllipticalCurve:
         self.a_input = a
         self.b_input = b
         self.prime = p
-        self.function = lambda (x): pow(x, 3, self.prime) + (self.a_input * x) + self.b_input
+        if self.prime >= 1:
+            self.function = lambda (x): pow(x, 3, self.prime) + (self.a_input * x) + self.b_input
+        else:
+            self.function = lambda (x): pow(x, 3) + (self.a_input * x) + self.b_input
 
     def print_curve(self):
         """
@@ -355,14 +358,15 @@ class EllipticalCurve:
       because the slope will be zero which does not allow for the function to work properly.
       :param xp: The first x coordinate
       :param yp: The first y coordinate
-      :return: a tuple that is the new x,y coordinate after point doubling
+      :return: a tuple that is the new x,y coordinate after point doubling, or the factors of the modulus if it is
+      composite.
       """
 
         if self.prime >= 1:
             d, inv, _ = egcd(2*yp, self.prime)
             if d == 1:
-                slope = lambda x, y: ((3 * (pow(x, 2, self.prime)) + self.a_input) * inv) % self.prime
-                m = slope(xp, yp)
+                slope = lambda x: ((3 * (pow(x, 2, self.prime)) + self.a_input) * inv) % self.prime
+                m = slope(xp)
                 xr = (pow(m, 2, self.prime) - 2 * xp) % self.prime
                 yr = (m * (xp - xr) - yp) % self.prime
                 return xr, yr
@@ -440,9 +444,7 @@ def main():
                     "Print the curve\n2) Evaluate a point on the curve(This will only give you the positive y value, "
                     "the negative is just the negative of it) \n3) Point addition with two points(you MUST have "
                     "two points, if you only have one please select Point Doubling)\n4) Point Doubling(Use this if you "
-                    "have only one available point in your curve and you wish to get 2P\n5) Evaluate all points on the "
-                    "curve (note that if your prime is very large, this function will fail and return an error,and if "
-                    "your curve is not over a prime, this will not work because there are infinite possible points)\n"))
+                    "have only one available point in your curve and you wish to get 2P\n"))
                 if x == 0:
                     break
                 elif x == 1:
@@ -466,9 +468,6 @@ def main():
                     xp = int(raw_input("Please enter the x - coordinate: "))
                     yp = int(raw_input("Please enter the y - coordinate: "))
                     print ecurve.point_doubling(xp, yp)
-                elif x == 5:
-                   # print ecurve.evaluate_all_points()
-                    print "This function is currently being reconstructed."
         elif choice == 8:
             x = int(raw_input("Please enter the number to be factored: "))
             print primefactors(x)
